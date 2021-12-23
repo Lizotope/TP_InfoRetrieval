@@ -1,0 +1,418 @@
+*****************************************************************************
+** Compte-rendu du TP "Information Retrieval" - semaine du 06 décembre 2021 *
+***************************************************************************** 
+* Equipe : Mouhcine El Fellah - Elisabeth Bourgeois                         *
+* Master Big Data GEM/Ensimag - promotion 2022                              *
+*****************************************************************************
+*
+* PRELUDE : 
+* 
+* 1 - Nous avons du installé la bibliothèque pickle5 * et l'importer, cf 
+* search.py et pageRank.py), au lieu d'utiliser la library * pickle qui 
+* donnait l'erreur suivante tant sur un terminal que sur anaconda. 
+* "erreur : "ValueError: unsupported pickle protocol: 5 anaconda"
+*
+* 2 - Nous avons abondamment commenté les scripts pour nous faciliter les 
+* compréhensions "à froid" lors de nos révisions. 
+*
+*****************************************************************************
+* PARTIE 2 : CRAWLING THE DATA
+*****************************************************************************
+*
+* Q2.1 : "Category:Biology"
+*
+* Q2.2 : La sortie est : "
+* Crawling at depth 0 . Pages to dw: 184
+* Crawling at depth 1 . Pages to dw: 1909 
+* "
+** Note perso : 
+** Le script permet de récupérer la liste des pages relatives à la catégorie 
+** sus-citée, à 2 niveaux 
+* ici niv 1 : liste des pages linkés par toutes les pages de la catégorie 
+* ici niv 2 : pages référencées par celles du niv1
+*
+* Q2.3 : 
+* wiki.lst contient tous les titres de pages de la catégorie "Biology".
+*
+*****************************************************************************
+* PARTIE 3 : DOWNLOADING THE DATA
+*****************************************************************************
+*
+* Q3.1 : 
+* Une seule exécution du batch permet de récupérer 3000 pages
+* Cmd execution : ./dw.sh wiki.lst (wiki.lst doit être dans le même répertoire)
+* Output : 
+*   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+*                                  Dload  Upload   Total   Spent    Left  Speed
+* 100 10.0M    0  9.9M  100 49831   863k   4214  0:00:11  0:00:11 --:--:-- 1109k
+* 
+* D'autre part, le batch a créé un répertoire "dws" et un fichier "xaa.chunks".
+*
+* Q3.2 : L'API utilisée par Wikipedia : https://en.wikipedia.org/wiki/Special:Export
+* Q3.3 : Les pages sont encodés au format xml.
+*
+*****************************************************************************
+* PARTIE 4 : PARSING THE DATA
+*****************************************************************************
+*
+* Q4.1 : 
+* Les deux matrices sont de type "dictionnary" (type "dict"). Leurs noms sont 
+* "links" and "doctok". 
+* Un enregistrement du dictionnaire est composé d'une clé et de sa valeur,
+* chacun de ces deux arguments ayant son algèbre. 
+* Ces dictionnaires sont encodés grâce à la fonction dump de la library pickle. 
+* Cet encodage est appelé sérialisation. Il permet une compacité, une 
+* simplicité de programmation, des actions de lecture/écriture moins 
+* gourmandes pour le processeur. 
+*
+* Q4.2 : 
+* Soit l'exemple suivant : 
+* Le contenu de la page "https://en.wikipedia.org/wiki/3-Arylpropiolonitriles" 
+* a été téléchargé dans le fichier xml "xaa.chunks". On retrouve dans ce 
+* dernier le contenu suivant (extrait):  
+* ..."when high selectivity and biostability are especially important: namely 
+* for the preparation of [[Antibody-drug conjugate|antibody−drug conjugates]] 
+* and other [[Biopharmaceutical|biologics]]. Standard procedure for APN 
+* protein labeling consists in incubation of a protein containing free 
+* [[cysteine]] residues with an APN-f unctionalized probe in 
+* [[Phosphate-buffered saline|PBS buffer]] at pH 7.5-9.0 at room temperature 
+* for 2–12 hours, followed b"...
+* La chaîne "[[Biopharmaceutical|biologics]]" de xaa.chunks contient : 
+* - la chaîne "Biopharmaceutical" qui est le lien cible du mot, 
+* - et la chaîne "biologics" est le texte du lien : c'est le mot tel qu'affiché 
+*   dans l'article, et qui fait référence au 
+*   lien https://en.wikipedia.org/wiki/Biopharmaceutical)
+*
+* Q4.3 : linkRe = "\[\[(.+?)\]\]" (ligne 32 de parsexml.py)
+* Q4.4 : Différence avec Q4.3 ?
+*
+*****************************************************************************
+* PARTIE 5 - PAGERANK OF THE DOCUMENTS
+*****************************************************************************
+*
+* Q5.1 : distribution uniforme: "w = 1.0 / len(links[idx])" (cf l22 de pageRank.py)
+*
+* Q5.2 . C'est l'effet "SINK" : 
+* Sur les pages sans connexion sortantes, l'utilisateur est coincé. En consé-
+* -quence, la page a artificiellement un rank élevé. On introduit donc arti-
+* -ficiellement un saut (téléportation forcée!). 
+*
+* Q5.3 : convergence en norme 1. La distance entre a et b est sur Rd d'où zip()  
+* Critère de convergence sur la distance delta qui doit passé sous un certain seuil
+* Lignes 53-54 : 
+* 	delta = sum(abs(b-a) for a,b in zip(pageRanksNew , pageRanks))
+*   pageRanks = pageRanksNew
+*
+* Q5.4 : 
+* --> Output : 
+Convergence delta: inf
+Convergence delta: 1.4990422087480089
+Convergence delta: 1.0266127086315657
+Convergence delta: 0.4974718376554632
+Convergence delta: 0.27637733421177724
+Convergence delta: 0.1454695673990416
+Convergence delta: 0.08578563015203308
+Convergence delta: 0.05153368685962578
+Convergence delta: 0.031970863072025096
+Convergence delta: 0.0220503111109364
+Convergence delta: 0.014708341463733558
+Convergence delta: 0.009826763441301092
+Convergence delta: 0.007221869674555775
+Convergence delta: 0.005383207878604073
+Convergence delta: 0.003929752197795497
+Convergence delta: 0.0030078762207817068
+Convergence delta: 0.002244984430896032
+Convergence delta: 0.0016973841708081564
+Convergence delta: 0.001277632021894804
+Convergence delta: 0.0009708913541875638
+Convergence delta: 0.0007349704662667697
+Convergence delta: 0.0005597513324884342
+Convergence delta: 0.0004300894184941749
+Convergence delta: 0.0003387737608633024
+Convergence delta: 0.0002759858328606231
+Convergence delta: 0.00023403781143451505
+Convergence delta: 0.0002013678807614637
+Convergence delta: 0.00017381041019893145
+Convergence delta: 0.00015035754803734714
+Convergence delta: 0.00013017917139919937
+Convergence delta: 0.00011277997959109544
+Convergence delta: 9.776025450812372e-05
+Convergence delta: 8.482417452269333e-05
+Convergence delta: 7.377529034620108e-05
+Convergence delta: 6.4204271120737e-05
+Convergence delta: 5.58743752672534e-05
+Convergence delta: 4.8617857473971695e-05
+Convergence delta: 4.2304965773629506e-05
+Convergence delta: 3.680906053976819e-05
+Convergence delta: 3.202951747399756e-05
+Convergence delta: 2.786931512716583e-05
+Convergence delta: 2.424797668898369e-05
+Convergence delta: 2.1095310437263054e-05
+Convergence delta: 1.835176470452312e-05
+Convergence delta: 1.5964007199631297e-05
+Convergence delta: 1.3887124896220208e-05
+Convergence delta: 1.2080300871182236e-05
+Convergence delta: 1.0508191057564357e-05
+Convergence delta: 9.140921380721228e-06
+Convergence delta: 7.952502226631113e-06
+Convergence delta: 6.918824090175525e-06
+Convergence delta: 6.019787560920543e-06
+Convergence delta: 5.237212675476396e-06
+Convergence delta: 4.556089479753375e-06
+Convergence delta: 3.964964412575019e-06
+Convergence delta: 3.450834316358326e-06
+Convergence delta: 3.003310304292459e-06
+Convergence delta: 2.613531111613724e-06
+Convergence delta: 2.2741166075338355e-06
+Convergence delta: 1.978608420034948e-06
+Convergence delta: 1.7213804882283598e-06
+Convergence delta: 1.497490114737792e-06
+Convergence delta: 1.3026476893611915e-06
+Convergence delta: 1.1330967769711525e-06
+Convergence delta: 9.855703849980679e-07
+Convergence delta: 8.572170947528552e-07
+Convergence delta: 7.45554448162533e-07
+Convergence delta: 6.484181862481604e-07
+Convergence delta: 5.639272424565645e-07
+Convergence delta: 4.904353042042126e-07
+Convergence delta: 4.2651247927932194e-07
+Convergence delta: 3.709145066261725e-07
+Convergence delta: 3.2255895457137715e-07
+Convergence delta: 2.8050357424915786e-07
+Convergence delta: 2.4392859802741516e-07
+Convergence delta: 2.1212033443987217e-07
+Convergence delta: 1.8445835641039997e-07
+Convergence delta: 1.6040234040568706e-07
+Convergence delta: 1.3948272253583294e-07
+Convergence delta: 1.2129064156858637e-07
+Convergence delta: 1.0547082924519322e-07
+Convergence delta: 9.171386870084292e-08
+Convergence delta: 7.975108632677036e-08
+Convergence delta: 6.934836397339895e-08
+Convergence delta: 6.03024013355087e-08
+Convergence delta: 5.243637232611015e-08
+Convergence delta: 4.559618438638145e-08
+Convergence delta: 3.9648326080393356e-08
+Convergence delta: 3.4476180331405705e-08
+Convergence delta: 2.997881590462658e-08
+Convergence delta: 2.606797607702699e-08
+Convergence delta: 2.2667400502573575e-08
+Convergence delta: 1.9710329197901292e-08
+Convergence delta: 1.71390424092018e-08
+Convergence delta: 1.490319870136659e-08
+Convergence delta: 1.2958996963518231e-08
+Convergence delta: 1.1268431521446764e-08
+Biotechnology (rank score = 0.08260392680621867 )
+Category:Biotechnology (rank score = 0.08129260313511813 )
+Category:Branches of biology (rank score = 0.053629481270324325 )
+DNA (rank score = 0.03475409987936858 )
+Category:Philosophy of biology (rank score = 0.01973307619916603 )
+Category:Biology terminology (rank score = 0.01630170076219797 )
+Biological interaction (rank score = 0.01398792340799874 )
+*
+* --> Convergence : 97 itérations.
+*
+* --> Pour analyser les pagerank, 
+*       1 : je souhaite lire pageRank.dict mais étant sous format binaire, je 
+*           créé un programme transf_file.py qui va permettre de me le lire :  
+*              import pickle5 as pickle
+*              import sys
+*              # reading the data from the file
+*              with open(sys.argv[1], 'rb') as handle:
+*                 data = handle.read()
+*              # reconstructing the data as dictionary
+*              d = pickle.loads(data)
+*              print(d)
+*
+*       2 : exécution commande en stockant l'output dans un fichier pagerank_output: 
+*               python3 transf_file.py pageRank.dict > pagerank_output
+*
+*       3 : Je souhaite maintenant rechercher le rank de "Charles Darwin".
+*           Je créé un autre script transf_file_darwin.py, copie de transf_file.py,
+*           je remplace print(d) par print(d['Charles Darwin']), j'exécute comme 
+*           précedemment en outputant dans Darwinrank_output, puis l'ouvre. 
+*           "Charles Darwin" est introuvable !
+*
+*       4 : J'utilise une recherche aavec mon vscodium sur le mot Darwin, je trouve 
+*           néanmoins : 
+*                  The Complete Works of Charles Darwin Online': 8.858428415842707e-05,
+*                  'Darwin Medal': 0.00025666730603637146
+*                  A Darwinian Left': 7.442383185434971e-05
+*                  'Darwin–Wallace Medal': 0.00012906602937733179
+*
+*
+* --> pour rechercher la page avec le plus haut rank, 
+*
+*       1 : je rajoute dans transf_file.py (par ex): 
+*               #search the max value
+*               all_values = d.values()
+*               max_value = max(all_values)
+*               print("la val max est : ", max_value)
+*               # search the key of max value
+*               max_key = max(d, key=d.get)
+*               print("la key de la val max est : ", max_key)
+*
+*       2 : après exécution, la sortie affiche la réponse souhaitée :
+*              "Biotechnology", dont la val max est : 0.08260392680621916
+*
+*****************************************************************************
+* PARTIE 6 - WOOGLE !
+*****************************************************************************
+*
+* Q6.1 : 
+* Ouput avec la requête "theory of evolution" : 
+      results for query :  theory of evolution
+      results by token relevance
+      0. Category:Geobiology
+      1. Category:Botany
+      2. Category:Mycology
+      3. Category:Paleobiology
+      4. Category:Human biology
+      5. Category:History of biology by subdiscipline
+      6. Category:Historians of biology
+      7. Category:Chinese biologists
+      8. Category:Developmental biology
+      9. Category:Zoology
+      10. Category:Lists of biologists by field
+      11. Category:Zoologists by field of research
+      12. Category:Gerontology
+      13. Category:Botanists by field of research
+      14. Category:Rate of evolution
+      results by rank
+      0. Category:Zoology
+      1. Category:Developmental biology
+      2. Category:Botany
+      3. Category:Gerontology
+      4. Category:Mycology
+      5. Category:Human biology
+      6. Category:Historians of biology
+      7. Category:Paleobiology
+      8. Category:Geobiology
+      9. Category:Zoologists by field of research
+      10. Category:History of biology by subdiscipline
+      11. Category:Rate of evolution
+      12. Category:Botanists by field of research
+      13. Category:Lists of biologists by field
+      14. Category:Chinese biologists
+*
+* Par le "vector model" (=par pertinence des token), les pages sélectionnées sont des 
+* pages de catégories wikipedia. Le parsing va permettre d'analyser ces pages 
+* catégories ainsi que celles du niveau inférieur, pointées par la page catégorie 
+* correspondantes. Ces pages n'ont pas * d'attrait direct avec la théorie de l'évolution.
+* Néanmoins ces mêmes pages contiennent un grand nombre de fois le mot "evolution" et "theory".
+* L'omniprésence des mots de la query dans ces articles expliquent leur sélection par notre 
+* moteur de recherche "par vector model" dans le top15. 
+* Le produit scalaire tf-idf des documents "topés" avec les token de la requête est 
+* artificellement gonflé. Cette "tricherie" consistant à répéter intentionnellement, plus 
+* que nécessaire, un mot phare (ici "evolution") s'appelle "Content farms". 
+*
+* Q6.2.
+* La mesure de similarité tf-idf  utilisée pour mesurer combien sont concordants les 
+* documents avec la query est un produit scalaire. * Il est possible de rendre ce 
+* dernier plus indépendants du poids des token dans une query tant que dans celui des 
+* documents du corpus, en normalisant ce produit scalaire. La nouvelle mesure de 
+* similarité ainsi créé est appelé cosinus.
+* Voir correction dans search_cos.py, ligne 86 : 
+*         tfidf[doc][tok] = cos_sim(tf[doc][tok],tokInfo[tok])   #cosine
+* et définition de la fct cos_sim, lignes 26 à 31.
+*
+* Output de search_cos.py pour "theory of evolution" : 
+        results for query :  theory of evolution
+        results by token relevance
+        0. Paul E. Griffiths
+        1. Sociobiology
+        2. Viral eukaryogenesis
+        3. Biological interaction
+        4. Gilbert Morgan Smith Medal
+        5. Fluorescent glucose biosensor
+        6. Selective breeding
+        7. Cambrian explosion
+        8. Cheating (biology)
+        9. Biological rules
+        10. Ruth Millikan
+        11. Philip Kitcher
+        12. Ecological trap
+        13. Cell culture
+        14. Probabilistic prognosis
+        results by rank
+        0. Biological interaction
+        1. Cheating (biology)
+        2. Selective breeding
+        3. Sociobiology
+        4. Philip Kitcher
+        5. Cell culture
+        6. Cambrian explosion
+        7. Paul E. Griffiths
+        8. Gilbert Morgan Smith Medal
+        9. Ecological trap
+        10. Biological rules
+        11. Probabilistic prognosis
+        12. Ruth Millikan
+        13. Fluorescent glucose biosensor
+        14. Viral eukaryogenesis 
+*
+* Les pages topées ci-dessus (celles non rankés, les 15 premières affichées 
+* ci-dessus, 322 à 336) semblent * modérément plus pertinentes, et la 
+* collecte ne plus souffrir du "content farms". 
+*
+* Q6.3 :
+* Le script search_cos.py incluait déjà l'appel à la fonction rankResults, et 
+* le résultat est présenté ci-dessus (l338 à 352) pour les 15 premiers.
+* Le résultat fait mention à des pages contenant de nombreux liens "evolution". 
+* Cela a l'air modérément "nice" (??).
+* Il est toujours possible d'augmenter la valeur de "top" et d'imprimer la sortie
+* dans un fichier dédié. 
+*
+* Q6.4 : 
+* Je créé une copie du script précédent search_cos_bactq.py pour mieux distinguer 
+* les réponses aux questions ci-dessus. 
+* J'augmente top à 500 et j'imprime la sortie dans evolbact_query_output
+* Rank de "Bacterial evolution" : 98 et, après avoir ranké les résultats par pageRank
+* le rank de la page est rétrogradé à 325. Le pageRank étant censé ajouter un critère
+* de pertinence plus fort à la sélection des documents, ce retrogradage est inattendu.
+*
+* Je réalise une recherche en retirant de la query le token "of" qui devrait être
+* un stop-word. Les résultats sont imprimées dans le fichier evolbact_query_output_ofless.
+* Les résultats sont sensiblement plus concluants (ranks 87 et 316). 
+* Il est également possible de "jouer" sur la liste des stopword indiqués lors du 
+* parsing (parsexml.py).
+*
+*****************************************************************************
+* PARTIE 7 : EXTRAS
+*****************************************************************************
+*
+* Q7.1 : 
+* A l'instar de Q5.4, .2 (ligne 228 de ce document), lors de l'exécution de : 
+*              python3 transf_file.py pageRank.dict > pagerank_output
+* Je trouve les page ranks suivants : 
+*             - DNA : 0.03475409987936878
+*             - RNA: 0.007463537974630663
+*
+* Q7.2 : 
+* Je créé une copie de pageRank.py appelée pageRank_tuned.py
+* Avant d'exécuter pickle.dump sur "pageRankDict", je force 
+* dans le dictionnaire pageRankdict, la valeur de page rank pour l'enregistrement
+* dont la clé est "DNA et RNA" (lignes 69 à 71) : 
+            pageRankDict["DNA"] = 0.1
+            pageRankDict["RNA"] = 0.1
+* J'ai choisi une valeur plus grande que le max des valeurs des token. 
+* J'exécute : python3 pageRank_tuned.py et à l'instar de Q5.4.  .2 :
+            python3 transf_file.py pageRank.dict > pagerank7_output
+* Le moteur de recherche devrait donc désormais favoriser très fortement ces 2 pages.
+*
+* Q7.3 : 
+* Exemple de règles à impl
+* la stemmisation va permettre le remplacement du produit scalaire (normalisé par le cosine 
+* ou non) tf-idf par un autre scalaire tf'-idf' exprimé dans un corpus de documents fictifs
+* où la query initiale n'est remplacé que par des token "clés"/qui ont le pouvoir de 
+* représenter au mieux un ensemble de token de la même famille (une sorte de token-médoïde = 
+* "concept", rassemblant des token d'une même ontologie) et où les token des documents 
+* sont remplacés par leur token-clé.
+* La library svd de scipy ou encore les fonctions de décomposition de la library sklearn
+*  semble permettre "facilement" un calcul des valeurs propres.
+* Cette optimisation par token-médoïde devrait permettre de "ratisser" plus justement les 
+* synonymes des token initiaux, et donc de sélectionner des articles plus pertinents.
+* (performance du  moteur +++, mais temps exécution -- à prévoir) 
+
+
+
